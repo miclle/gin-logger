@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"qiniupkg.com/x/xlog.v7"
 )
 
 var pid = uint32(time.Now().UnixNano() % 4294967291)
@@ -77,9 +76,7 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 			xReqid = GenReqId()
 		}
 
-		logger := xlog.New(xReqid)
-
-		c.Header("X-Reqid", logger.ReqId)
+		c.Header("X-Reqid", xReqid)
 
 		path := c.Request.URL.RequestURI()
 
@@ -90,12 +87,12 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 		// Log only when path is not being skipped
 		if _, ok := skip[path]; !ok {
 			fmt.Fprintf(out, "[GIN] [%s] [Route Start]\t%v |%s  %s %-7s %s\n",
-				logger.ReqId,
+				xReqid,
 				start.Format("2006/01/02 - 15:04:05"),
 				methodColor, reset, method,
 				path,
 			)
-			logger.Infof("%+v", c.Request)
+			fmt.Printf("%+v", c.Request)
 		}
 
 		// Process request
@@ -114,7 +111,7 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 			methodColor = colorForMethod(method)
 
 			fmt.Fprintf(out, "[GIN] [%s] [Route End]\t%v |%s %3d %s| %13v | %s |%s  %s %-7s %s\n%s",
-				logger.ReqId,
+				xReqid,
 				end.Format("2006/01/02 - 15:04:05"),
 				statusColor, statusCode, reset,
 				latency,
