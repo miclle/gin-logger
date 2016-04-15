@@ -92,7 +92,7 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 				methodColor, reset, method,
 				path,
 			)
-			fmt.Printf("%+v", c.Request)
+			fmt.Printf("%+v\n", c.Request)
 		}
 
 		// Process request
