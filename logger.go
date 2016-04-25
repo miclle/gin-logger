@@ -86,7 +86,7 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 
 		// Log only when path is not being skipped
 		if _, ok := skip[path]; !ok {
-			fmt.Fprintf(out, "[GIN] [%s] [Route Start]\t%v |%s  %s %-7s %s\n",
+			fmt.Fprintf(out, "[GIN] [%s] [Started]\t%v |%s  %s %-7s %s\n",
 				xReqid,
 				start.Format("2006/01/02 - 15:04:05"),
 				methodColor, reset, method,
@@ -110,7 +110,7 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 			statusColor := colorForStatus(statusCode)
 			methodColor = colorForMethod(method)
 
-			fmt.Fprintf(out, "[GIN] [%s] [Route End]\t%v |%s %3d %s| %13v | %s |%s  %s %-7s %s\n%s",
+			fmt.Fprintf(out, "[GIN] [%s] [Ended]\t%v |%s %3d %s| %13v | %s |%s  %s %-7s %s\n%s",
 				xReqid,
 				end.Format("2006/01/02 - 15:04:05"),
 				statusColor, statusCode, reset,
