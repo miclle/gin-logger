@@ -12,7 +12,8 @@ import (
 
 var pid = uint32(time.Now().UnixNano() % 4294967291)
 
-func GenReqId() string {
+// GenReqID is a random generate string func
+func GenReqID() string {
 	var b [12]byte
 	binary.LittleEndian.PutUint32(b[:], pid)
 	binary.LittleEndian.PutUint64(b[4:], uint64(time.Now().UnixNano()))
@@ -30,10 +31,12 @@ var (
 	reset   = string([]byte{27, 91, 48, 109})
 )
 
+// ErrorLogger func
 func ErrorLogger() gin.HandlerFunc {
 	return ErrorLoggerT(gin.ErrorTypeAny)
 }
 
+// ErrorLoggerT func
 func ErrorLoggerT(typ gin.ErrorType) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
@@ -47,13 +50,13 @@ func ErrorLoggerT(typ gin.ErrorType) gin.HandlerFunc {
 	}
 }
 
-// Instances a Logger middleware that will write the logs to gin.DefaultWriter
+// Logger Instances a Logger middleware that will write the logs to gin.DefaultWriter
 // By default gin.DefaultWriter = os.Stdout
 func Logger() gin.HandlerFunc {
 	return LoggerWithWriter(gin.DefaultWriter)
 }
 
-// Instance a Logger middleware with the specified writter buffer.
+// LoggerWithWriter Instance a Logger middleware with the specified writter buffer.
 // Example: os.Stdout, a file opened in write mode, a socket...
 func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 	var skip map[string]struct{}
@@ -73,7 +76,7 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 		xReqid := c.Request.Header.Get("X-Reqid")
 
 		if xReqid == "" {
-			xReqid = GenReqId()
+			xReqid = GenReqID()
 		}
 
 		c.Header("X-Reqid", xReqid)
@@ -92,7 +95,6 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 				methodColor, reset, method,
 				path,
 			)
-			fmt.Printf("%+v", c.Request)
 		}
 
 		// Process request
