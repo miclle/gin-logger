@@ -112,7 +112,7 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 				latency,
 				clientIP,
 				methodColor, method, reset,
-				c.Request.RequestURI,
+				c.Request.URL.String(),
 				comment,
 			)
 		}
