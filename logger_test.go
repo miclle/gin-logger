@@ -23,8 +23,8 @@ func performRequest(r http.Handler, method, path string) *httptest.ResponseRecor
 	return w
 }
 
-func TestGenReqId(t *testing.T) {
-	reqid := GenReqId()
+func TestGenReqID(t *testing.T) {
+	reqid := GenReqID()
 	assert.NotEmpty(t, reqid)
 }
 
