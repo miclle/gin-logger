@@ -12,7 +12,8 @@ import (
 
 var pid = uint32(time.Now().UnixNano() % 4294967291)
 
-func GenReqId() string {
+// GenReqID is a random generate string func
+func GenReqID() string {
 	var b [12]byte
 	binary.LittleEndian.PutUint32(b[:], pid)
 	binary.LittleEndian.PutUint64(b[4:], uint64(time.Now().UnixNano()))
@@ -47,13 +48,13 @@ func ErrorLoggerT(typ gin.ErrorType) gin.HandlerFunc {
 	}
 }
 
-// Instances a Logger middleware that will write the logs to gin.DefaultWriter
+// Logger instances a Logger middleware that will write the logs to gin.DefaultWriter
 // By default gin.DefaultWriter = os.Stdout
 func Logger() gin.HandlerFunc {
 	return LoggerWithWriter(gin.DefaultWriter)
 }
 
-// Instance a Logger middleware with the specified writter buffer.
+// LoggerWithWriter instance a Logger middleware with the specified writter buffer.
 // Example: os.Stdout, a file opened in write mode, a socket...
 func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 	var skip map[string]struct{}
@@ -71,28 +72,21 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 		start := time.Now()
 
 		xReqid := c.Request.Header.Get("X-Reqid")
-
 		if xReqid == "" {
-			xReqid = GenReqId()
+			xReqid = GenReqID()
 		}
 
 		c.Header("X-Reqid", xReqid)
 
 		path := c.Request.URL.RequestURI()
 
-		clientIP := c.ClientIP()
-		method := c.Request.Method
-		methodColor := colorForMethod(method)
-
 		// Log only when path is not being skipped
 		if _, ok := skip[path]; !ok {
-			fmt.Fprintf(out, "[GIN] [%s] [Started]\t%v |%s  %s %-7s %s\n",
+			fmt.Fprintf(out, "[GIN] [%s] [Started]\t%v |\t  %#v\n",
 				xReqid,
 				start.Format("2006/01/02 - 15:04:05"),
-				methodColor, reset, method,
-				path,
+				c.Request.Header,
 			)
-			fmt.Printf("%+v\n", c.Request)
 		}
 
 		// Process request
@@ -104,20 +98,21 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 			end := time.Now()
 			latency := end.Sub(start)
 
-			comment := c.Errors.ByType(gin.ErrorTypePrivate).String()
-
 			statusCode := c.Writer.Status()
 			statusColor := colorForStatus(statusCode)
-			methodColor = colorForMethod(method)
+			clientIP := c.ClientIP()
+			method := c.Request.Method
+			methodColor := colorForMethod(method)
+			comment := c.Errors.ByType(gin.ErrorTypePrivate).String()
 
-			fmt.Fprintf(out, "[GIN] [%s] [Ended]\t%v |%s %3d %s| %13v | %s |%s  %s %-7s %s\n%s",
+			fmt.Fprintf(out, "[GIN] [%s] [Completed]\t%v |%s %3d %s| %13v | %s | %s %s %s|\t %s\n%s",
 				xReqid,
 				end.Format("2006/01/02 - 15:04:05"),
 				statusColor, statusCode, reset,
 				latency,
 				clientIP,
-				methodColor, reset, method,
-				path,
+				methodColor, method, reset,
+				c.Request.RequestURI,
 				comment,
 			)
 		}
