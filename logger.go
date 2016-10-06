@@ -40,12 +40,9 @@ func ErrorLogger() gin.HandlerFunc {
 func ErrorLoggerT(typ gin.ErrorType) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
-		// avoid writting if we already wrote into the response body
-		if !c.Writer.Written() {
-			errors := c.Errors.ByType(typ)
-			if len(errors) > 0 {
-				c.JSON(-1, errors)
-			}
+		errors := c.Errors.ByType(typ)
+		if len(errors) > 0 {
+			c.JSON(-1, errors)
 		}
 	}
 }
@@ -56,7 +53,7 @@ func Logger() gin.HandlerFunc {
 	return LoggerWithWriter(gin.DefaultWriter)
 }
 
-// LoggerWithWriter Instance a Logger middleware with the specified writter buffer.
+// LoggerWithWriter instance a Logger middleware with the specified writter buffer.
 // Example: os.Stdout, a file opened in write mode, a socket...
 func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 	var skip map[string]struct{}
@@ -74,26 +71,20 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 		start := time.Now()
 
 		xReqid := c.Request.Header.Get("X-Reqid")
-
 		if xReqid == "" {
 			xReqid = GenReqID()
 		}
 
 		c.Header("X-Reqid", xReqid)
 
-		path := c.Request.URL.RequestURI()
-
-		clientIP := c.ClientIP()
-		method := c.Request.Method
-		methodColor := colorForMethod(method)
+		path := c.Request.URL.Path
 
 		// Log only when path is not being skipped
 		if _, ok := skip[path]; !ok {
-			fmt.Fprintf(out, "[GIN] [%s] [Route Start]\t%v |%s  %s %-7s %s\n",
+			fmt.Fprintf(out, "[GIN] [%s] [Started]\t%v |\t  %#v\n",
 				xReqid,
 				start.Format("2006/01/02 - 15:04:05"),
-				methodColor, reset, method,
-				path,
+				c.Request.Header,
 			)
 		}
 
@@ -106,20 +97,21 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 			end := time.Now()
 			latency := end.Sub(start)
 
-			comment := c.Errors.ByType(gin.ErrorTypePrivate).String()
-
 			statusCode := c.Writer.Status()
 			statusColor := colorForStatus(statusCode)
-			methodColor = colorForMethod(method)
+			clientIP := c.ClientIP()
+			method := c.Request.Method
+			methodColor := colorForMethod(method)
+			comment := c.Errors.ByType(gin.ErrorTypePrivate).String()
 
-			fmt.Fprintf(out, "[GIN] [%s] [Route End]\t%v |%s %3d %s| %13v | %s |%s  %s %-7s %s\n%s",
+			fmt.Fprintf(out, "[GIN] [%s] [Completed]\t%v |%s %3d %s| %13v | %s | %s %s %s|\t %s\n%s",
 				xReqid,
 				end.Format("2006/01/02 - 15:04:05"),
 				statusColor, statusCode, reset,
 				latency,
 				clientIP,
-				methodColor, reset, method,
-				path,
+				methodColor, method, reset,
+				c.Request.URL.String(),
 				comment,
 			)
 		}
