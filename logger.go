@@ -38,12 +38,9 @@ func ErrorLogger() gin.HandlerFunc {
 func ErrorLoggerT(typ gin.ErrorType) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
-		// avoid writting if we already wrote into the response body
-		if !c.Writer.Written() {
-			errors := c.Errors.ByType(typ)
-			if len(errors) > 0 {
-				c.JSON(-1, errors)
-			}
+		errors := c.Errors.ByType(typ)
+		if len(errors) > 0 {
+			c.JSON(-1, errors)
 		}
 	}
 }
@@ -78,7 +75,7 @@ func LoggerWithWriter(out io.Writer, notlogged ...string) gin.HandlerFunc {
 
 		c.Header("X-Reqid", xReqid)
 
-		path := c.Request.URL.RequestURI()
+		path := c.Request.URL.Path
 
 		// Log only when path is not being skipped
 		if _, ok := skip[path]; !ok {
